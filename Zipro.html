@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ZIPRO GAMES — Vote • Stake • Watch</title>
+
+  <!-- Fonts & simple icon -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#061223;
+      --card: rgba(255,255,255,0.03);
+      --muted:#9aa4b2;
+      --accent1:#6ee7b7;
+      --accent2:#7c5cff;
+      font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
+      color-scheme: dark;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:
+      radial-gradient(800px 300px at 10% 10%, rgba(124,92,255,0.06), transparent),
+      radial-gradient(700px 250px at 90% 90%, rgba(110,231,183,0.03), transparent),
+      var(--bg);color:#e6eef8;-webkit-font-smoothing:antialiased}
+    header{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid rgba(255,255,255,0.03)}
+    .brand{display:flex;gap:12px;align-items:center}
+    .brand .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent2),var(--accent1));display:flex;align-items:center;justify-content:center;color:#071126;font-weight:800}
+    .brand h1{margin:0;font-size:18px}
+    .top-actions{display:flex;gap:10px;align-items:center}
+    .btn{background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#071126;border:none;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
+    .ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:10px;color:var(--muted);cursor:pointer}
+    main{max-width:1200px;margin:20px auto;padding:0 18px}
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:20px}
+    .card{background:var(--card);padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+    .hero{display:flex;gap:18px;align-items:center}
+    .hero .hero-info{flex:1}
+    .hero img{width:420px;height:220px;object-fit:cover;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.6)}
+    .matches{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px}
+    .match{display:flex;gap:12px;align-items:center;padding:10px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent)}
+    .match img{width:120px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0}
+    .match .meta{flex:1}
+    .small{font-size:13px;color:var(--muted)}
+    .muted{color:var(--muted)}
+    .controls{display:flex;gap:8px;margin-top:8px}
+    .watch-btn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 10px;border-radius:8px;color:var(--muted)}
+    .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;padding:18px;z-index:1000}
+    .modal.open{display:flex}
+    .modal .box{background:#0f1724;padding:18px;border-radius:12px;width:100%;max-width:480px;color:inherit}
+    input,select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit;margin-top:8px}
+    .success-popup{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#071126;padding:18px;border-radius:12px;z-index:2000;min-width:260px;text-align:center}
+    .bank-box{background:rgba(255,255,255,0.02);padding:12px;border-radius:8px;margin-top:10px}
+    footer{text-align:center;color:var(--muted);padding:18px 0;margin-top:20px}
+    @media (max-width:980px){.grid{grid-template-columns:1fr}.matches{grid-template-columns:1fr}}
+    .img-fit{width:100%;height:100%;object-fit:cover;border-radius:8px}
+    .admin-badge{background:rgba(255,255,255,0.04);padding:6px 8px;border-radius:8px;font-weight:700;color:var(--muted)}
+    .label{font-size:13px;color:var(--muted);margin-top:6px}
+    .helper{font-size:12px;color:var(--muted)}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">ZP</div>
+    <div>
+      <h1>ZIPRO GAMES</h1>
+      <div class="small">Predict • Vote • Watch</div>
+    </div>
+  </div>
+
+  <div class="top-actions">
+    <button class="ghost" id="btnAdmin">Admin</button>
+    <button class="btn" id="btnCreate">Create Match</button>
+  </div>
+</header>
+
+<main>
+  <div class="grid">
+    <!-- LEFT: Matches -->
+    <div>
+      <div class="card hero">
+        <div class="hero-info">
+          <h2 style="margin:0">Live & Upcoming Matches</h2>
+          <p class="small">Vote requires name & email. Stake to reveal bank details. Watch via stream UID/link you set.</p>
+        </div>
+        <img id="heroImage" src="" alt="Hero">
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div class="matches" id="matchesList">Loading matches...</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Live + Bank details -->
+    <aside>
+      <div class="card">
+        <h3>Selected Match</h3>
+        <div id="selectedMatch" class="small muted">No match selected</div>
+
+        <div style="margin-top:12px">
+          <h4>Stake & Pay</h4>
+          <p class="small">Submit stake to reveal payment details.</p>
+          <button class="btn" id="openStakeBtn" style="width:100%;margin-top:8px">Stake </button>
+        </div>
+
+        <hr style="margin:12px 0;border-color:rgba(255,255,255,0.03)">
+
+        <h4>ACCOUNT DETAILS </h4>
+        <div id="bankDetails" class="bank-box small muted">No bank details set</div>
+
+        <hr style="margin:12px 0;border-color:rgba(255,255,255,0.03)">
+
+        <h4>Watch The Live Match</h4>
+        <p class="small">Time-4.00pm <br>venue-Free Fire <br>UID-55636553 </p>
+        <div style="display:flex;gap:8px">
+          <button class="watch-btn" id="watchBtn"></button>
+          <button class="ghost" id="openStreamEditor"></button>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<!-- Vote Modal -->
+<div class="modal" id="voteModal" aria-hidden="true">
+  <div class="box">
+    <h3 id="voteTitle">Vote</h3>
+    <form id="voteForm" autocomplete="off">
+      <!-- FormSubmit target: ziproogames@gmail.com -->
+      <!-- We will POST programmatically to FormSubmit and show in-page popup -->
+      <input type="hidden" name="_captcha" value="false">
+      <input type="hidden" name="_subject" value="ZIPRO GAMES Vote">
+      <input type="hidden" name="matchId" id="vote_matchId">
+      <div id="voteChoices"></div>
+
+      <label class="label">Your name</label>
+      <input name="name" required>
+
+      <label class="label">Your email</label>
+      <input name="email" type="email" required>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+        <button type="button" class="ghost" onclick="closeModal('voteModal')">Cancel</button>
+        <button type="submit" class="btn">Submit Vote</button>
+      </div>
+      <p class="helper">Your name & email will be emailed to ziproogames@gmail.com after submission.</p>
+    </form>
+  </div>
+</div>
+
+<!-- Stake Modal -->
+<div class="modal" id="stakeModal" aria-hidden="true">
+  <div class="box">
+    <h3 id="stakeTitle">Stake (reveal bank details)</h3>
+    <form id="stakeForm" autocomplete="off">
+      <input type="hidden" name="_captcha" value="false">
+      <input type="hidden" name="_subject" value="ZIPRO GAMES Stake">
+      <input type="hidden" name="matchId" id="stake_matchId">
+
+      <label class="label">Your name</label>
+      <input name="name" required>
+
+      <label class="label">Your email</label>
+      <input name="email" type="email" required>
+
+      <label class="label">Amount</label>
+      <input name="amount" type="number" min="1" step="any" required>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+        <button type="button" class="ghost" onclick="closeModal('stakeModal')">Cancel</button>
+        <button type="submit" class="btn">Reveal bank details</button>
+      </div>
+      <p class="helper">A copy of this stake will be emailed to ziproogames@gmail.com.</p>
+    </form>
+  </div>
+</div>
+
+<!-- Admin Modal (client-side only) -->
+<div class="modal" id="adminModal" aria-hidden="true">
+  <div class="box">
+    <h3>Admin — Manage Matches & Bank</h3>
+
+    <div style="margin-top:8px">
+      <strong>Bank details</strong>
+      <label class="label">Bank name</label>
+      <input id="admin_bankName">
+      <label class="label">Account name</label>
+      <input id="admin_accountName">
+      <label class="label">Account number</label>
+      <input id="admin_accountNumber">
+      <label class="label">Instructions</label>
+      <input id="admin_bankInstructions">
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+        <button class="ghost" onclick="loadBankToForm()">Load</button>
+        <button class="btn" id="saveBankBtn">Save bank details</button>
+      </div>
+    </div>
+
+    <hr style="margin:12px 0;border-color:rgba(255,255,255,0.03)">
+
+    <div>
+      <strong>Create / Edit Match</strong>
+      <label class="label">Title</label>
+      <input id="admin_matchTitle" placeholder="TEAM A vs TEAM B">
+
+      <label class="label">Players (comma separated)</label>
+      <input id="admin_players" placeholder="Player A, Player B">
+
+      <label class="label">Stream URL / UID</label>
+      <input id="admin_stream">
+
+      <label class="label">Image (paste URL) OR upload below</label>
+      <input id="admin_imageUrl" placeholder="/images/match.jpg or https://...">
+
+      <label class="label">Or upload image file</label>
+      <input id="admin_imageFile" type="file" accept="image/*">
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+        <button class="ghost" onclick="closeModal('adminModal')">Close</button>
+        <button class="btn" id="saveMatchBtn">Save Match</button>
+      </div>
+      <p class="helper">Matches are saved to your browser storage (localStorage). Share this device/admin only to control matches.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Stream Editor modal -->
+<div class="modal" id="streamModal" aria-hidden="true">
+  <div class="box">
+    <h3>Set stream link for match</h3>
+    <label class="label">Match</label>
+    <select id="streamMatchSelect"></select>
+    <label class="label">Stream URL / UID</label>
+    <input id="streamUrlInput" placeholder="https://... or UID">
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+      <button class="ghost" onclick="closeModal('streamModal')">Cancel</button>
+      <button class="btn" id="saveStreamBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bank modal shown after stake submit -->
+<div class="modal" id="bankModal" aria-hidden="true">
+  <div class="box">
+    <h3>Bank details — copy to pay</h3>
+    <div id="bankBox" class="bank-box"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+      <button class="ghost" onclick="closeModal('bankModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Success popup -->
+<div class="success-popup" id="successPopup">
+  <h3 id="successTitle">✅ Done</h3>
+  <p id="successMsg" class="small">Action successful.</p>
+  <div style="margin-top:12px"><button class="btn" onclick="hideSuccess()">OK</button></div>
+</div>
+
+<footer>ZIPRO GAMES — contact: ziproogames@gmail.com</footer>
+
+<!-- UpscalerJS & TFJS (optional; used if CORS allows). If blocked, fallback will still show images. -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/upscaler@latest/dist/browser/umd/upscaler.min.js"></script>
+
+<script>
+/* ============================
+  Single-file ZIPRO GAMES (no backend)
+  - All data in localStorage
+  - Emailing via FormSubmit to ziproogames@gmail.com
+  - Admin functions client-side only
+  ============================ */
+
+const FORM_ENDPOINT = 'https://formsubmit.co/ziproogames@gmail.com';
+const STORAGE_KEY = 'zipro_data_v1';
+
+// default data
+const DEFAULT = {
+  heroImage: 'LOL.jpg', // default hero
+  matches: [
+    { id: 'm1', title: 'GAME LOVER vs LIL DANE ', players: ['GAME LOVER','LIL DANE'], image: 'LIL.jpg', stream: '' }
+  ],
+  bank: {
+    bankName: 'MONIEPOINT',
+    accountName: 'BABALOLA DANIEL',
+    accountNumber: '7019623779',
+    instructions: 'Send EXACT amount and reference ZIPRO-{yourname}'
+  },
+  adminPass: 'ZIPROADMIN' // change this in browser localStorage after first load for security
+};
+
+// load or init
+let DATA = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || DEFAULT;
+saveData(); // ensure stored
+
+// Upscaler (try to use it; if fails we just show originals)
+let upscaler;
+try{
+  if(window.Upscaler){ upscaler = new Upscaler.default(); }
+} catch(e){ console.warn('Upscaler not loaded', e); upscaler = null; }
+
+// ---------------- UI helpers ----------------
+function saveData(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(DATA)); }
+function el(id){ return document.getElementById(id); }
+function showSuccess(title, msg){ el('successTitle').innerText = title; el('successMsg').innerText = msg; el('successPopup').style.display='block'; }
+function hideSuccess(){ el('successPopup').style.display='none'; }
+
+// Close modal
+function closeModal(id){ el(id).classList.remove('open'); el(id).style.display='none'; }
+function openModal(id){ el(id).classList.add('open'); el(id).style.display='flex'; }
+
+// ---------------- render ----------------
+function renderAll(){
+  // hero
+  el('heroImage').src = DATA.heroImage;
+
+  // bank
+  renderBank();
+
+  // matches
+  const list = el('matchesList');
+  list.innerHTML = '';
+  DATA.matches.forEach(m=>{
+    const card = document.createElement('div');
+    card.className = 'match';
+    const img = document.createElement('img');
+    img.alt = m.title;
+    img.src = m.image;
+    img.loading = 'lazy';
+    img.style.background = 'rgba(0,0,0,0.12)';
+    // ensure fit & high-quality display; optionally upscale if same-origin/data URL
+    if (upscaler && m.image.startsWith('data:') ) {
+      upscaler.upscale(m.image).then(dataUrl => { img.src = dataUrl; }).catch(()=>{/* ignore */});
+    }
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.innerHTML = `<div style="font-weight:700">${m.title}</div><div class="small">${m.players.join(' • ')}</div>
+      <div style="margin-top:8px" class="controls">
+        <button class="btn" onclick='openVote("${m.id}")'>Vote</button>
+        <button class="ghost" onclick='openStake("${m.id}")'>Stake</button>
+        <button class="watch-btn" onclick='openWatch("${m.id}")'></button>
+      </div>`;
+    card.appendChild(img);
+    card.appendChild(meta);
+    list.appendChild(card);
+  });
+
+  // selected match display (first match default)
+  if (DATA.matches.length) {
+    setSelected(DATA.matches[0].id);
+  } else {
+    setSelected(null);
+  }
+}
+
+function renderBank(){
+  const b = DATA.bank;
+  if (!b || !b.accountNumber) {
+    el('bankDetails').innerHTML = '<div class="small muted">No bank details set</div>';
+    return;
+  }
+  el('bankDetails').innerHTML = `<div style="font-weight:800">${escapeHtml(b.accountName)}</div>
+    <div class="small">${escapeHtml(b.bankName)} • ${escapeHtml(b.accountNumber)}</div>
+    <div class="small" style="margin-top:6px">${escapeHtml(b.instructions||'')}</div>`;
+}
+
+function setSelected(matchId){
+  const m = DATA.matches.find(x=>x.id===matchId);
+  if (!m){ el('selectedMatch').innerText = 'No match selected'; el('watchBtn').disabled=true; return; }
+  el('selectedMatch').innerHTML = `<div style="font-weight:700">${escapeHtml(m.title)}</div><div class="small">${escapeHtml(m.players.join(' • '))}</div>`;
+  el('watchBtn').disabled = !m.stream;
+  el('watchBtn').onclick = ()=>{ if (m.stream) window.open(m.stream,'_blank'); else alert('No stream set for this match'); };
+}
+
+// Escape helper
+function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// ---------------- Actions: Vote ----------------
+function openVote(matchId){
+  const match = DATA.matches.find(m=>m.id===matchId);
+  if (!match) return alert('match not found');
+  el('voteTitle').innerText = `Vote — ${match.title}`;
+  el('vote_matchId').value = matchId;
+  // choices
+  const ctn = el('voteChoices'); ctn.innerHTML = '';
+  match.players.forEach((p,i)=>{
+    const id = `vchoice_${match.id}_${i}`;
+    ctn.insertAdjacentHTML('beforeend', `<label style="display:block;margin-top:8px"><input type="radio" name="choice" value="${escapeHtml(p)}" ${i===0?'checked':''}> ${escapeHtml(p)}</label>`);
+  });
+  openModal('voteModal');
+}
+
+// vote form submit -> send to FormSubmit via fetch, show success popup
+el('voteForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  // attach match title for clearer email
+  const matchId = fd.get('matchId');
+  const match = DATA.matches.find(m=>m.id===matchId);
+  if (match) fd.append('matchTitle', match.title);
+  // POST to FormSubmit
+  try {
+    const res = await fetch(FORM_ENDPOINT, { method:'POST', body: fd });
+    // Formsubmit often returns 200 or a redirect. Treat successful as success
+    if (res.status === 200 || res.status === 302 || res.ok) {
+      closeModal('voteModal'); showSuccess('✅ Vote recorded', 'Thanks — the host has been emailed.');
+      // store a local record of vote for UI (optional)
+      const store = JSON.parse(localStorage.getItem('zipro_votes')||'[]');
+      store.push({ matchId: matchId, choice: fd.get('choice'), ts: new Date().toISOString(), name: fd.get('name'), email: fd.get('email') });
+      localStorage.setItem('zipro_votes', JSON.stringify(store));
+    } else {
+      // sometimes FormSubmit blocks CORS; but response may still be a redirect — treat as success if status 200-399
+      if (res.status >= 200 && res.status < 400) {
+        closeModal('voteModal'); showSuccess('✅ Vote recorded', 'Thanks — the host has been emailed.');
+      } else {
+        const text = await res.text().catch(()=>res.statusText);
+        alert('Vote failed: ' + text);
+      }
+    }
+  } catch (err) {
+    // Some browsers block CORS to FormSubmit; but FormSubmit also supports JSONP-less posts via normal form submit.
+    // As a fallback, submit a hidden form to FormSubmit to trigger the redirect (but we intercept UX)
+    try {
+      const fallbackForm = document.createElement('form');
+      fallbackForm.action = FORM_ENDPOINT;
+      fallbackForm.method = 'POST';
+      fallbackForm.target = '_blank';
+      // copy fields
+      for (const pair of fd.entries()){
+        const i = document.createElement('input'); i.type='hidden'; i.name = pair[0]; i.value = pair[1]; fallbackForm.appendChild(i);
+      }
+      document.body.appendChild(fallbackForm); fallbackForm.submit(); fallbackForm.remove();
+      closeModal('voteModal'); showSuccess('✅ Vote recorded', 'Submitted via fallback. Check that you confirmed email with FormSubmit.');
+    } catch (e2){
+      alert('Vote submission failed: ' + (err.message||err));
+    }
+  }
+});
+
+// ---------------- Actions: Stake (reveal bank) ----------------
+function openStake(matchId){
+  const match = DATA.matches.find(m=>m.id===matchId);
+  if (!match) return alert('match not found');
+  el('stakeTitle').innerText = `Stake — ${match.title}`;
+  el('stake_matchId').value = matchId;
+  openModal('stakeModal');
+}
+
+el('stakeForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const matchId = fd.get('matchId');
+  const match = DATA.matches.find(m=>m.id===matchId);
+  if(match) fd.append('matchTitle', match.title);
+  // Formsubmit POST
+  try {
+    const res = await fetch(FORM_ENDPOINT, { method:'POST', body:fd });
+    if (res.status === 200 || res.status === 302 || res.ok) {
+      closeModal('stakeModal');
+      // show bank details from DATA.bank
+      const b = DATA.bank || {};
+      const box = el('bankBox');
+      box.innerHTML = `<div style="font-weight:800">${escapeHtml(b.accountName||'')}</div>
+        <div class="small">${escapeHtml(b.bankName||'')} • ${escapeHtml(b.accountNumber||'')}</div>
+        <div class="small" style="margin-top:8px">${escapeHtml(b.instructions||'')}</div>
+        <div style="margin-top:10px"><button class="btn" onclick="copyText('${escapeHtml(b.accountNumber||'')}')">Copy account number</button></div>`;
+      openModal('bankModal');
+      showSuccess('✅ Stake recorded','Bank details revealed — owner emailed.');
+      // Store stake record locally
+      const store = JSON.parse(localStorage.getItem('zipro_stakes')||'[]');
+      store.push({ matchId, name: fd.get('name'), email: fd.get('email'), amount: fd.get('amount'), ts: new Date().toISOString() });
+      localStorage.setItem('zipro_stakes', JSON.stringify(store));
+    } else {
+      if (res.status >=200 && res.status<400) {
+        closeModal('stakeModal'); showSuccess('✅ Stake recorded','Bank details revealed — owner emailed.');
+      } else {
+        const text = await res.text().catch(()=>res.statusText); alert('Stake failed: ' + text);
+      }
+    }
+  } catch (err) {
+    // fallback to open a form in new tab
+    try {
+      const fallbackForm = document.createElement('form');
+      fallbackForm.action = FORM_ENDPOINT;
+      fallbackForm.method = 'POST';
+      fallbackForm.target = '_blank';
+      for (const pair of fd.entries()){
+        const i = document.createElement('input'); i.type='hidden'; i.name = pair[0]; i.value = pair[1]; fallbackForm.appendChild(i);
+      }
+      document.body.appendChild(fallbackForm); fallbackForm.submit(); fallbackForm.remove();
+      closeModal('stakeModal');
+      const b = DATA.bank || {};
+      const box = el('bankBox');
+      box.innerHTML = `<div style="font-weight:800">${escapeHtml(b.accountName||'')}</div>
+        <div class="small">${escapeHtml(b.bankName||'')} • ${escapeHtml(b.accountNumber||'')}</div>
+        <div class="small" style="margin-top:8px">${escapeHtml(b.instructions||'')}</div>
+        <div style="margin-top:10px"><button class="btn" onclick="copyText('${escapeHtml(b.accountNumber||'')}')">Copy account number</button></div>`;
+      openModal('bankModal'); showSuccess('✅ Stake recorded','Fallback submitted — check your email (confirm FormSubmit).');
+    } catch(e2){
+      alert('Stake submission failed: ' + (err.message||err));
+    }
+  }
+});
+
+function copyText(txt){ navigator.clipboard.writeText(txt).then(()=>alert('Copied to clipboard')); }
+
+// ---------------- Admin: open modal with simple password ----------------
+el('btnAdmin').addEventListener('click', ()=>{
+  const pass = prompt('Enter admin password:');
+  if (!pass) return;
+  // check against stored adminPass
+  const stored = DATA.adminPass || DEFAULT.adminPass;
+  if (pass !== stored) return alert('Wrong admin password');
+  // open admin
+  openModal('adminModal');
+  // fill bank fields & match fields
+  el('admin_bankName').value = DATA.bank.bankName || '';
+  el('admin_accountName').value = DATA.bank.accountName || '';
+  el('admin_accountNumber').value = DATA.bank.accountNumber || '';
+  el('admin_bankInstructions').value = DATA.bank.instructions || '';
+}
+
+// Save bank
+);
+el('saveBankBtn').addEventListener('click', ()=>{
+  DATA.bank = {
+    bankName: el('admin_bankName').value.trim(),
+    accountName: el('admin_accountName').value.trim(),
+    accountNumber: el('admin_accountNumber').value.trim(),
+    instructions: el('admin_bankInstructions').value.trim()
+  };
+  saveData(); renderBank(); showSuccess('✅ Bank saved','Bank details updated locally.');
+});
+
+// Save match
+el('saveMatchBtn').addEventListener('click', async ()=>{
+  const title = el('admin_matchTitle').value.trim();
+  const playersRaw = el('admin_players').value.trim();
+  if (!title || !playersRaw) return alert('Title and players required');
+  const players = playersRaw.split(',').map(s=>s.trim()).filter(Boolean);
+  let image = el('admin_imageUrl').value.trim();
+  // if file provided, read as data URL
+  const file = el('admin_imageFile').files[0];
+  if (!image && file) {
+    image = await readFileAsDataURL(file);
+  }
+  const stream = el('admin_stream').value.trim();
+  const id = 'm_' + Date.now();
+  DATA.matches.unshift({ id, title, players, image: image || DATA.heroImage, stream });
+  // clear admin form
+  el('admin_matchTitle').value=''; el('admin_players').value=''; el('admin_imageUrl').value=''; el('admin_imageFile').value=''; el('admin_stream').value='';
+  saveData(); renderAll(); showSuccess('✅ Match saved','Match added locally.');
+});
+
+// Create match quick button — opens admin modal
+el('btnCreate').addEventListener('click', ()=>{ 
+  // open admin using admin password prompt
+  const pass = prompt('Admin password to create match:');
+  if (!pass) return;
+  if (pass !== (DATA.adminPass || DEFAULT.adminPass)) return alert('Wrong admin password');
+  openModal('adminModal');
+});
+
+// Stream editor: set stream for match
+el('openStreamEditor').addEventListener('click', ()=>{
+  // open stream modal and fill select
+  const sel = el('streamMatchSelect'); sel.innerHTML='';
+  DATA.matches.forEach(m=>{
+    const opt = document.createElement('option'); opt.value = m.id; opt.innerText = m.title; sel.appendChild(opt);
+  });
+  openModal('streamModal');
+});
+el('saveStreamBtn').addEventListener('click', ()=>{
+  const id = el('streamMatchSelect').value;
+  const url = el('streamUrlInput').value.trim();
+  const m = DATA.matches.find(x=>x.id===id);
+  if(!m) return alert('select match');
+  m.stream = url;
+  saveData(); closeModal('streamModal'); showSuccess('✅ Stream saved','Stream URL/UID saved for that match.');
+});
+
+// fill stream select on open
+el('streamMatchSelect').addEventListener('click', ()=>{
+  // set selected to first if none selected
+  if (!el('streamMatchSelect').value && DATA.matches[0]) el('streamMatchSelect').value = DATA.matches[0].id;
+});
+
+// watch match open
+function openWatch(matchId){
+  const m = DATA.matches.find(x=>x.id===matchId);
+  if (!m) return alert('No match found');
+  if (!m.stream) return alert('No stream set for this match');
+  window.open(m.stream, '_blank');
+}
+
+// Set selected when clicking a match card - we set first as default. Also keep clickable
+el('matchesList').addEventListener('click', (ev)=>{
+  const card = ev.target.closest('.match');
+  if (!card) return;
+  const imgs = card.getElementsByTagName('img');
+  if (!imgs.length) return;
+  const src = imgs[0].src;
+  // find match by image or title
+  const m = DATA.matches.find(x=>x.image === src || x.title === card.querySelector('.meta div')?.innerText);
+  if (m) setSelected(m.id);
+});
+
+// helper to read file to data URL
+function readFileAsDataURL(file){
+  return new Promise((res, rej)=>{
+    const r = new FileReader();
+    r.onload = ()=>res(r.result);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+// admin load bank to form
+function loadBankToForm(){
+  el('admin_bankName').value = DATA.bank.bankName || '';
+  el('admin_accountName').value = DATA.bank.accountName || '';
+  el('admin_accountNumber').value = DATA.bank.accountNumber || '';
+  el('admin_bankInstructions').value = DATA.bank.instructions || '';
+}
+
+// Open stake from right panel
+el('openStakeBtn').addEventListener('click', ()=>{
+  // choose first match if none selected
+  const m = DATA.matches[0];
+  if(!m) return alert('No match available');
+  el('stake_matchId').value = m.id;
+  openModal('stakeModal');
+});
+
+// Utility: when clicking outside modal, close it
+document.addEventListener('click', (e)=>{
+  document.querySelectorAll('.modal.open').forEach(mod=>{
+    if (e.target === mod) { mod.classList.remove('open'); mod.style.display='none'; }
+  });
+});
+
+// initialize UI
+renderAll();
+
+</script>
+</body>
+</html>
